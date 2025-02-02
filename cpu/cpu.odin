@@ -19,7 +19,9 @@ ARITHMETIC: [4]proc(cpu: ^CPU, memory: ^Mem, command: u8) = {
 
 step :: proc(cpu: ^CPU, memory: ^Mem) {
     command := fetch(cpu, memory)
-    decode(cpu, memory, command)
+    execute := decode(cpu, memory, command)
+    execute(cpu, memory, command)
+    cpu.pc += 1
 }
 
 fetch :: proc(cpu: ^CPU, memory: ^Mem) -> u8 {
