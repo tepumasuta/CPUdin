@@ -81,11 +81,11 @@ div :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     pc += 1
 }
 
-
 move_low :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     cpu.regs[(command & 0x30) >> 4] = (cpu.regs[(command & 0x30) >> 4] & 0xF0) | (command & 0x0F)
     cpu.pc += 1
 }
+
 
 move_high :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     cpu.regs[(command & 0x30) >> 4] = (cpu.regs[(command & 0x30) >> 4] & 0x0F) | ((command & 0x0F) << 4)
@@ -95,12 +95,11 @@ move_high :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
 jump :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     using cpu
     switch (command & 0x0C) >> 2 {
-    case 0b00: pc = command & 0x03
+    case 0b00: pc = cpu.regs[command & 0x03]
     case 0b01: if flags.GR { pc = cpu.regs[command & 0x03] } else { pc += 1 }
     case 0b10: if flags.OF { pc = cpu.regs[command & 0x03] } else { pc += 1 }
     case 0b11: if flags.ZF { pc = cpu.regs[command & 0x03] } else { pc += 1 }
     }
-    unreachable()
 }
 
 cmp :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
