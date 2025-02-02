@@ -14,7 +14,7 @@ CPU :: struct {
 RAM :: [256]u8
 
 ARITHMETIC: [4]proc(cpu: ^CPU, memory: ^RAM, command: u8) = {
-    add, sub, div, mul,
+    add, sub, mul, div,
 }
 
 LEFTOVER: [4]proc(cpu: ^CPU, memory: ^RAM, command: u8) = {
