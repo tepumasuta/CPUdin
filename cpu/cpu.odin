@@ -29,8 +29,8 @@ fetch :: proc(cpu: ^CPU, memory: ^Mem) -> u8 {
 decode :: proc(cpu: ^CPU, memory: ^Mem, command: u8) -> proc(cpu: ^CPU, memory: Mem, command: u8) {
     switch (command & 0xC0) >> 6 {
     case 0b00: return ARITHMETIC[(command & 0x30) >> 4] // 00BBCCDD -> BB -- command, CC, DD -- operands
-    case 0b01: return move_high // mov.l
-    case 0b10: return move_low // mov.h
+    case 0b01: return move_low // mov.l
+    case 0b10: return move_high // mov.h
     case 0b11: return jump // 11UABCDD -> U -- uncond, A -- OF, B -- ZF, C -- GR, DD -- reg
     }
     unreachable()
@@ -74,12 +74,12 @@ div :: proc(cpu: ^CPU, memory: Mem, command: u8) {
 
 
 move_low :: proc(cpu: ^CPU, memory: Mem, command: u8) {
-    cpu.regs[command & 0x30] = (cpu.regs[command & 0x30] & 0xF0) | (command & 0x0F)
+    cpu.regs[(command & 0x30) >> 4] = (cpu.regs[command & 0x30] & 0xF0) | (command & 0x0F)
 }
 
 
 move_high :: proc(cpu: ^CPU, memory: Mem, command: u8) {
-    cpu.regs[command & 0x30] = (cpu.regs[command & 0x30] & 0xF0) | (command & 0x0F)
+    cpu.regs[(command & 0x30) >> 4] = (cpu.regs[command & 0x30] & 0x0F) | (command & 0xF0)
 }
 
 jump :: proc(cpu: ^CPU, memory: Mem, command: u8) {
