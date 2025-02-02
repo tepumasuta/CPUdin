@@ -76,12 +76,11 @@ div :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
 
 
 move_low :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
-    cpu.regs[(command & 0x30) >> 4] = (cpu.regs[command & 0x30] & 0xF0) | (command & 0x0F)
+    cpu.regs[(command & 0x30) >> 4] = (cpu.regs[(command & 0x30) >> 4] & 0xF0) | (command & 0x0F)
 }
 
-
 move_high :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
-    cpu.regs[(command & 0x30) >> 4] = (cpu.regs[command & 0x30] & 0x0F) | (command & 0xF0)
+    cpu.regs[(command & 0x30) >> 4] = (cpu.regs[(command & 0x30) >> 4] & 0x0F) | ((command & 0x0F) << 4)
 }
 
 jump :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
