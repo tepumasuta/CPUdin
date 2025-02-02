@@ -52,6 +52,7 @@ sub :: proc(cpu: ^CPU, memory: Mem, command: u8) {
     regs[(command & 0x0C) >> 2] = u8(res %% 255)
     flags.ZF = res == 0
     flags.OF = op1 < op2
+    flags.GR = op1 > op2
 }
 
 mul :: proc(cpu: ^CPU, memory: Mem, command: u8) {
