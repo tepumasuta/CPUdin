@@ -17,6 +17,10 @@ ARITHMETIC: [4]proc(cpu: ^CPU, memory: ^RAM, command: u8) = {
     add, sub, div, mul,
 }
 
+LEFTOVER: [4]proc(cpu: ^CPU, memory: ^RAM, command: u8) = {
+    jump, mock, store, load,
+}
+
 step :: proc(cpu: ^CPU, memory: ^RAM) {
     command := fetch(cpu, memory)
     execute := decode(cpu, memory, command)
@@ -33,7 +37,7 @@ decode :: proc(cpu: ^CPU, memory: ^RAM, command: u8) -> proc(cpu: ^CPU, memory: 
     case 0b00: return ARITHMETIC[(command & 0x30) >> 4] // 00BBCCDD -> BB -- command, CC, DD -- operands
     case 0b01: return move_low // mov.l
     case 0b10: return move_high // mov.h
-    case 0b11: return jump // 11UABCDD -> U -- uncond, A -- OF, B -- ZF, C -- GR, DD -- reg
+    case 0b11: return LEFTOVER[(command & 0x30) >> 4] // 11AABBCCDD, DD -- reg, AA{00->jmp, 10->store, 11->load}
     }
     unreachable()
 }
@@ -84,9 +88,14 @@ move_high :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
 }
 
 jump :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
-    using cpu
-    if command & 0x20 != 0 do pc = regs[command & 0x03]
-    if command & 0x10 != 0 && flags.OF || command & 0x08 != 0 && flags.ZF || command & 0x04 != 0 && flags.GR {
-        pc = regs[command & 0x03]
-    }
+    unimplemented("Has to be refactored")
+    // using cpu
+    // if command & 0x20 != 0 do pc = regs[command & 0x03]
+    // if command & 0x10 != 0 && flags.OF || command & 0x08 != 0 && flags.ZF || command & 0x04 != 0 && flags.GR {
+    //     pc = regs[command & 0x03]
+    // }
 }
+
+mock :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unreachable() /* "Unknown command" */ }
+store :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unimplemented("store") }
+load :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unimplemented("load") }
