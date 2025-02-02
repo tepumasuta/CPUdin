@@ -18,7 +18,7 @@ ARITHMETIC: [4]proc(cpu: ^CPU, memory: ^RAM, command: u8) = {
 }
 
 LEFTOVER: [4]proc(cpu: ^CPU, memory: ^RAM, command: u8) = {
-    jump, mock, store, load,
+    jump, cmp, store, load,
 }
 
 step :: proc(cpu: ^CPU, memory: ^RAM) {
@@ -98,7 +98,7 @@ jump :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     unreachable()
 }
 
-mock :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unreachable() /* "Unknown command" */ }
+cmp :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unimplemented("cmp") }
 
 store :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     memory[cpu.regs[(command & 0x0C) >> 2]] = cpu.regs[command & 0x03]
