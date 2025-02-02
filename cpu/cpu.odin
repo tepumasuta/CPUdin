@@ -98,7 +98,14 @@ jump :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     unreachable()
 }
 
-cmp :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unimplemented("cmp") }
+cmp :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
+    using cpu
+    op1, op2 := cpu.regs[(command & 0x0C) >> 2], cpu.regs[command & 0x03]
+    res: i16 = i16(op1) - i16(op2)
+    flags.ZF = res == 0
+    flags.OF = op1 < op2
+    flags.GR = op1 > op2
+}
 
 store :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
     memory[cpu.regs[(command & 0x0C) >> 2]] = cpu.regs[command & 0x03]
