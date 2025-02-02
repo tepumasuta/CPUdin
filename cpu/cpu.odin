@@ -31,7 +31,7 @@ decode :: proc(cpu: ^CPU, memory: ^Mem, command: u8) -> proc(cpu: ^CPU, memory: 
     case 0b00: return ARITHMETIC[(command & 0x30) >> 4] // 00BBCCDD -> BB -- command, CC, DD -- operands
     case 0b01: return move_high // mov.l
     case 0b10: return move_low // mov.h
-    case 0b11: return jump
+    case 0b11: return jump // 11UABCDD -> U -- uncond, A -- OF, B -- ZF, C -- GR, DD -- reg
     }
     unreachable()
 }
@@ -82,4 +82,10 @@ move_high :: proc(cpu: ^CPU, memory: Mem, command: u8) {
     cpu.regs[command & 0x30] = (cpu.regs[command & 0x30] & 0xF0) | (command & 0x0F)
 }
 
-jump :: proc(cpu: ^CPU, memory: Mem, command: u8) { unimplemented("jump") }
+jump :: proc(cpu: ^CPU, memory: Mem, command: u8) {
+    using cpu
+    if command & 0x20 != 0 do pc = regs[command & 0x03]
+    if command & 0x10 != 0 && flags.OF || command & 0x08 != 0 && flags.ZF || command & 0x04 != 0 && flags.GR {
+        pc = regs[command & 0x03]
+    }
+}
