@@ -88,12 +88,14 @@ move_high :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
 }
 
 jump :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
-    unimplemented("Has to be refactored")
-    // using cpu
-    // if command & 0x20 != 0 do pc = regs[command & 0x03]
-    // if command & 0x10 != 0 && flags.OF || command & 0x08 != 0 && flags.ZF || command & 0x04 != 0 && flags.GR {
-    //     pc = regs[command & 0x03]
-    // }
+    using cpu
+    switch (command & 0x0C) >> 2 {
+    case 0b00: pc = command & 0x03
+    case 0b01: if flags.GR do pc = command & 0x03
+    case 0b10: if flags.OF do pc = command & 0x03
+    case 0b11: if flags.ZF do pc = command & 0x03
+    }
+    unreachable()
 }
 
 mock :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unreachable() /* "Unknown command" */ }
