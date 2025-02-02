@@ -99,5 +99,11 @@ jump :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
 }
 
 mock :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unreachable() /* "Unknown command" */ }
-store :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unimplemented("store") }
-load :: proc(cpu: ^CPU, memory: ^RAM, command: u8) { unimplemented("load") }
+
+store :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
+    memory[cpu.regs[(command & 0x0C) >> 2]] = cpu.regs[command & 0x03]
+}
+
+load :: proc(cpu: ^CPU, memory: ^RAM, command: u8) {
+    cpu.regs[command & 0x03] = memory[cpu.regs[(command & 0x0C) >> 2]]
+}
