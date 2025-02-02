@@ -36,7 +36,37 @@ decode :: proc(cpu: ^CPU, memory: ^Mem, command: u8) -> proc(cpu: ^CPU, memory: 
     unreachable()
 }
 
-add :: proc(cpu: ^CPU, memory: Mem, command: u8) { unimplemented("TODO: implement add") }
-sub :: proc(cpu: ^CPU, memory: Mem, command: u8) { unimplemented("TODO: implement sub") }
-div :: proc(cpu: ^CPU, memory: Mem, command: u8) { unimplemented("TODO: implement div") }
-mul :: proc(cpu: ^CPU, memory: Mem, command: u8) { unimplemented("TODO: implement mul") }
+add :: proc(cpu: ^CPU, memory: Mem, command: u8) {
+    using cpu
+    op1, op2 := cpu.regs[(command & 0x0C) >> 2], cpu.regs[command & 0x03]
+    res: u16 = u16(op1) + u16(op2)
+    regs[(command & 0x0C) >> 2] = u8(res)
+    flags.ZF = res == 0
+    flags.OF = res >= (1 << 8)
+}
+
+sub :: proc(cpu: ^CPU, memory: Mem, command: u8) {
+    using cpu
+    op1, op2 := cpu.regs[(command & 0x0C) >> 2], cpu.regs[command & 0x03]
+    res: i16 = i16(op1) - i16(op2)
+    regs[(command & 0x0C) >> 2] = u8(res %% 255)
+    flags.ZF = res == 0
+    flags.OF = op1 < op2
+}
+
+mul :: proc(cpu: ^CPU, memory: Mem, command: u8) {
+    using cpu
+    op1, op2 := cpu.regs[(command & 0x0C) >> 2], cpu.regs[command & 0x03]
+    res: u16 = u16(op1) * u16(op2)
+    regs[(command & 0x0C) >> 2] = u8(res)
+    flags.ZF = res == 0
+    flags.OF = res >= (1 << 8)
+}
+
+div :: proc(cpu: ^CPU, memory: Mem, command: u8) {
+    using cpu
+    op1, op2 := cpu.regs[(command & 0x0C) >> 2], cpu.regs[command & 0x03]
+    res: u16 = u16(op1) / u16(op2)
+    regs[(command & 0x0C) >> 2] = u8(res)
+    flags.ZF = res == 0
+}
