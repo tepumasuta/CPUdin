@@ -28,12 +28,12 @@ ReplError :: enum {
 }
 Quit :: struct {}
 Print :: union #no_nil {
-    All,
+    CPU,
     uint,
     ProgramCounter,
     Flags,
 }
-All :: struct {}
+CPU :: struct {}
 ProgramCounter :: struct {}
 Flags :: struct {}
 
@@ -54,7 +54,7 @@ get_action :: proc() -> Action {
     parts := strings.split(line, " ")
     if len(parts) > 2 do return Error { "Too many arguments", .InvalidArguments }
     if strings.starts_with("print", parts[0]) {
-        if len(parts) == 1 do return Print(All{})
+        if len(parts) == 1 do return Print(CPU{})
         if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
         if strings.starts_with("flags", parts[1]) do return Print(Flags{})
         if parts[1][0] == 'r' {
