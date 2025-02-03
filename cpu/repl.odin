@@ -20,17 +20,18 @@ ErrorType :: union #no_nil {
     ReplError,
 }
 ReplError :: enum {
-    WrongArguments,
+    InvalidArguments,
     UnknownCommand,
+    InvalidRegister,
 }
 Quit :: struct {}
 Print :: union #no_nil {
     All,
-    int,
+    uint,
     ProgramCounter,
     Flags,
 }
-All :: struct {}
+CPU :: struct {}
 ProgramCounter :: struct {}
 Flags :: struct {}
 
@@ -49,9 +50,18 @@ get_action :: proc() -> Action {
     if err != nil do return Error { "Failed to read line", err }
     if strings.starts_with("quit", line) do return Quit{}
     parts := strings.split(line, " ")
-    if len(parts) > 2 do return Error { "Too many arguments", .WrongArguments }
+    if len(parts) > 2 do return Error { "Too many arguments", .InvalidArguments }
     if strings.starts_with("print", parts[0]) {
-        unimplemented("TODO: parse print")
+        if len(parts) == 1 do return Print(All{})
+        if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
+        if strings.starts_with("flags", parts[1]) do return Print(Flags{})
+        if parts[1][0] == 'r' {
+            num, ok := strconv.parse_uint(parts[1][1:])
+            if !ok do return Error { "Unknown command", .UnknownCommand }
+            if num == 0 || num > 4 do return Error { "Incorrect register index", .InvalidRegister }
+            return Print(num)
+        }
+        return Error { "Invalid print arguments", .InvalidArguments }
     }
     return Error { "Unknown command", .UnknownCommand }
 }
