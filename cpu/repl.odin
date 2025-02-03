@@ -28,7 +28,15 @@ ReplError :: enum {
 }
 
 Quit :: struct {}
-Print :: struct {}
+Print :: union #no_nil {
+    All,
+    int,
+    ProgramCounter,
+    Flags,
+}
+All :: struct {}
+ProgramCounter :: struct {}
+Flags :: struct {}
 
 repl :: proc(cpu: ^CPU, mem: ^RAM) {
     for action := get_action();; action = get_action() {
