@@ -11,22 +11,18 @@ Action :: union #no_nil {
     Print,
     Error,
 }
-
 Error :: struct {
     excuse: string,
     err: ErrorType,
 }
-
 ErrorType :: union #no_nil {
     io.Error,
     ReplError,
 }
-
 ReplError :: enum {
     WrongArguments,
     UnknownCommand,
 }
-
 Quit :: struct {}
 Print :: union #no_nil {
     All,
