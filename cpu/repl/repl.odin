@@ -1,4 +1,6 @@
-package cpu
+package repl
+
+import "../../cpu"
 
 import "core:io"
 import "core:os"
@@ -31,11 +33,11 @@ Print :: union #no_nil {
     ProgramCounter,
     Flags,
 }
-CPU :: struct {}
+All :: struct {}
 ProgramCounter :: struct {}
 Flags :: struct {}
 
-repl :: proc(cpu: ^CPU, mem: ^RAM) {
+repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
     for action := get_action();; action = get_action() {
         unimplemented("TODO: repl loop")
     }
