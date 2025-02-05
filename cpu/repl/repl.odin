@@ -8,25 +8,30 @@ import "core:bufio"
 import "core:strings"
 import "core:strconv"
 
+@(private)
 Action :: union #no_nil {
     Quit,
     Print,
     Error,
 }
+@(private)
 Error :: struct {
     excuse: string,
     err: ErrorType,
 }
+@(private)
 ErrorType :: union #no_nil {
     io.Error,
     ReplError,
 }
+@(private)
 ReplError :: enum {
     InvalidArguments,
     UnknownCommand,
     InvalidRegister,
 }
-Quit :: struct {}
+@(private) Quit :: struct {}
+@(private)
 Print :: union #no_nil {
     CPU,
     uint,
@@ -34,14 +39,15 @@ Print :: union #no_nil {
     Flags,
     Mem,
 }
-CPU :: struct {}
-ProgramCounter :: struct {}
-Flags :: struct {}
+@(private) CPU :: struct {}
+@(private) ProgramCounter :: struct {}
+@(private) Flags :: struct {}
+@(private)
 Mem :: union {
     RAM,
     uint,
 }
-RAM :: struct {}
+@(private) RAM :: struct {}
 
 repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
     for action := get_action();; action = get_action() {
@@ -49,11 +55,13 @@ repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
     }
 }
 
+@(private)
 try_parse_quit :: proc(line: string) -> Maybe(Quit) {
     if strings.starts_with("quit", line) do return Quit{}
     return nil
 }
 
+@(private)
 try_parse_print_registers :: proc(parts: []string) -> Maybe(Action) {
     if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
     if strings.starts_with("flags", parts[1]) do return Print(Flags{})
@@ -64,6 +72,7 @@ try_parse_print_registers :: proc(parts: []string) -> Maybe(Action) {
     return Print(num)
 }
 
+@(private)
 try_parse_print_memory :: proc(parts: []string) -> Maybe(Action) {
     if !strings.starts_with("memory", parts[1]) do return nil
     if len(parts) == 2 do return Print(Mem(RAM{}))
@@ -73,6 +82,7 @@ try_parse_print_memory :: proc(parts: []string) -> Maybe(Action) {
     return Print(Mem(num))
 }
 
+@(private)
 try_parse_print :: proc(parts: []string) -> Maybe(Action) {
     if !strings.starts_with("print", parts[0]) do return nil
     if len(parts) == 1 do return Print(CPU{})
@@ -81,6 +91,7 @@ try_parse_print :: proc(parts: []string) -> Maybe(Action) {
     return Error { "Invalid print arguments", .InvalidArguments }
 }
 
+@(private)
 get_action :: proc() -> Action {
     stdin_reader: bufio.Reader
     bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
