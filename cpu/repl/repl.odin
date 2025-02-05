@@ -12,6 +12,7 @@ import "core:strconv"
 Action :: union #no_nil {
     Quit,
     Print,
+    Step,
     Error,
 }
 @(private)
@@ -48,6 +49,7 @@ Mem :: union {
     uint,
 }
 @(private) RAM :: struct {}
+@(private) Step :: struct {}
 
 repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
     for action := get_action();; action = get_action() {
@@ -58,6 +60,12 @@ repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
 @(private)
 try_parse_quit :: proc(line: string) -> Maybe(Quit) {
     if strings.starts_with("quit", line) do return Quit{}
+    return nil
+}
+
+@(private)
+try_parse_step :: proc(line: string) -> Maybe(Step) {
+    if strings.starts_with("step", line) do return Step{}
     return nil
 }
 
@@ -100,6 +108,7 @@ get_action :: proc() -> Action {
     defer if err == nil do delete(line)
     if err != nil do return Error { "Failed to read line", err }
     if action, empty := try_parse_quit(line).(Quit); !empty do return action
+    if action, empty := try_parse_step(line).(Step); !empty do return action
     parts := strings.split(line, " ")
     defer delete(parts)
     if action, empty := try_parse_print(parts).(Action); !empty do return action
