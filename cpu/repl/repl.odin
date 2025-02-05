@@ -49,6 +49,11 @@ repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
     }
 }
 
+try_parse_quit :: proc(line: string) -> Maybe(Quit) {
+    if strings.starts_with("quit", line) do return Quit{}
+    return nil
+}
+
 get_action :: proc() -> Action {
     stdin_reader: bufio.Reader
     bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
@@ -56,7 +61,7 @@ get_action :: proc() -> Action {
     line, err := bufio.reader_read_string(&stdin_reader, '\n')
     defer if err == nil do delete(line)
     if err != nil do return Error { "Failed to read line", err }
-    if strings.starts_with("quit", line) do return Quit{}
+    if action, empty := try_parse_quit(line).(Quit); !empty do return action
     parts := strings.split(line, " ")
     if len(parts) > 3 do return Error { "Too many arguments", .InvalidArguments }
     if strings.starts_with("print", parts[0]) {
