@@ -54,17 +54,31 @@ try_parse_quit :: proc(line: string) -> Maybe(Quit) {
     return nil
 }
 
+try_parse_print_registers :: proc(parts: []string) -> Maybe(Action) {
+    if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
+    if strings.starts_with("flags", parts[1]) do return Print(Flags{})
+    if parts[1][0] != 'r' do return nil
+    num, ok := strconv.parse_uint(parts[1][1:])
+    if !ok do return Error { "Unknown print command", .UnknownCommand }
+    if num == 0 || num > 4 do return Error { "Incorrect register index", .InvalidRegister }
+    return Print(num)
+}
+
+try_parse_print_memory :: proc(parts: []string) -> Maybe(Action) {
+    if !strings.starts_with("memory", parts[1]) do return nil
+    if len(parts) == 2 do return Print(Mem(RAM{}))
+    num, ok := strconv.parse_uint(parts[2])
+    if !ok do return Error { "Unknown memory cell", .InvalidArguments }
+    if num > 255 do return Error { "Incorrect memory address", .InvalidArguments }
+    return Print(Mem(num))
+}
+
 try_parse_print :: proc(parts: []string) -> Maybe(Action) {
     if !strings.starts_with("print", parts[0]) do return nil
     if len(parts) == 1 do return Print(CPU{})
-    if len(parts) != 2 do return Error { "Invalid print arguments", .InvalidArguments }
-    if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
-    if strings.starts_with("flags", parts[1]) do return Print(Flags{})
-    if parts[1][0] != 'r' do return Error { "Invalid print arguments", .InvalidArguments }
-    num, ok := strconv.parse_uint(parts[1][1:])
-    if !ok do return Error { "Unknown command", .UnknownCommand }
-    if num == 0 || num > 4 do return Error { "Incorrect register index", .InvalidRegister }
-    return Print(num)
+    if print, ok := try_parse_print_registers(parts).(Action); ok do return print
+    if print, ok := try_parse_print_memory(parts).(Action); ok do return print
+    return Error { "Invalid print arguments", .InvalidArguments }
 }
 
 get_action :: proc() -> Action {
@@ -77,14 +91,6 @@ get_action :: proc() -> Action {
     if action, empty := try_parse_quit(line).(Quit); !empty do return action
     parts := strings.split(line, " ")
     defer delete(parts)
-    if len(parts) > 3 do return Error { "Too many arguments", .InvalidArguments }
     if action, empty := try_parse_print(parts).(Action); !empty do return action
-    if strings.starts_with("memory", parts[1]) {
-        if len(parts) == 2 do return Print(Mem(RAM{}))
-        num, ok := strconv.parse_uint(parts[2])
-        if !ok do return Error { "Unknown memory cell", .InvalidArguments }
-        if num > 255 do return Error { "Incorrect memory address", .InvalidArguments }
-        return Print(Mem(num))
-    }
     return Error { "Unknown command", .UnknownCommand }
 }
