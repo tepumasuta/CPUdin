@@ -58,6 +58,23 @@ repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
 }
 
 @(private)
+get_action :: proc() -> Action {
+    stdin_reader: bufio.Reader
+    bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
+    defer bufio.reader_destroy(&stdin_reader)
+    line, err := bufio.reader_read_string(&stdin_reader, '\n')
+    defer if err == nil do delete(line)
+    if err != nil do return Error { "Failed to read line", err }
+    if action, empty := try_parse_quit(line).(Quit); !empty do return action
+    if action, empty := try_parse_step(line).(Step); !empty do return action
+    parts := strings.split(line, " ")
+    defer delete(parts)
+    if action, empty := try_parse_print(parts).(Action); !empty do return action
+    return Error { "Unknown command", .UnknownCommand }
+}
+
+
+@(private)
 try_parse_quit :: proc(line: string) -> Maybe(Quit) {
     if strings.starts_with("quit", line) do return Quit{}
     return nil
@@ -97,20 +114,4 @@ try_parse_print :: proc(parts: []string) -> Maybe(Action) {
     if print, ok := try_parse_print_registers(parts).(Action); ok do return print
     if print, ok := try_parse_print_memory(parts).(Action); ok do return print
     return Error { "Invalid print arguments", .InvalidArguments }
-}
-
-@(private)
-get_action :: proc() -> Action {
-    stdin_reader: bufio.Reader
-    bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
-    defer bufio.reader_destroy(&stdin_reader)
-    line, err := bufio.reader_read_string(&stdin_reader, '\n')
-    defer if err == nil do delete(line)
-    if err != nil do return Error { "Failed to read line", err }
-    if action, empty := try_parse_quit(line).(Quit); !empty do return action
-    if action, empty := try_parse_step(line).(Step); !empty do return action
-    parts := strings.split(line, " ")
-    defer delete(parts)
-    if action, empty := try_parse_print(parts).(Action); !empty do return action
-    return Error { "Unknown command", .UnknownCommand }
 }
