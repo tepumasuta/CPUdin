@@ -54,6 +54,19 @@ try_parse_quit :: proc(line: string) -> Maybe(Quit) {
     return nil
 }
 
+try_parse_print :: proc(parts: []string) -> Maybe(Action) {
+    if !strings.starts_with("print", parts[0]) do return nil
+    if len(parts) == 1 do return Print(CPU{})
+    if len(parts) != 2 do return nil
+    if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
+    if strings.starts_with("flags", parts[1]) do return Print(Flags{})
+    if parts[1][0] != 'r' do return nil
+    num, ok := strconv.parse_uint(parts[1][1:])
+    if !ok do return Error { "Unknown command", .UnknownCommand }
+    if num == 0 || num > 4 do return Error { "Incorrect register index", .InvalidRegister }
+    return Print(num)
+}
+
 get_action :: proc() -> Action {
     stdin_reader: bufio.Reader
     bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
@@ -63,27 +76,16 @@ get_action :: proc() -> Action {
     if err != nil do return Error { "Failed to read line", err }
     if action, empty := try_parse_quit(line).(Quit); !empty do return action
     parts := strings.split(line, " ")
+    defer delete(parts)
     if len(parts) > 3 do return Error { "Too many arguments", .InvalidArguments }
-    if strings.starts_with("print", parts[0]) {
-        if len(parts) == 1 do return Print(CPU{})
-        if len(parts) == 2 {
-            if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
-            if strings.starts_with("flags", parts[1]) do return Print(Flags{})
-            if parts[1][0] == 'r' {
-                num, ok := strconv.parse_uint(parts[1][1:])
-                if !ok do return Error { "Unknown command", .UnknownCommand }
-                if num == 0 || num > 4 do return Error { "Incorrect register index", .InvalidRegister }
-                return Print(num)
-            }
-        }
-        if strings.starts_with("memory", parts[1]) {
-            if len(parts) == 2 do return Print(Mem(RAM{}))
-            num, ok := strconv.parse_uint(parts[2])
-            if !ok do return Error { "Unknown memory cell", .InvalidArguments }
-            if num > 255 do return Error { "Incorrect memory address", .InvalidArguments }
-            return Print(Mem(num))
-        }
-        return Error { "Invalid print arguments", .InvalidArguments }
+    if action, empty := try_parse_print(parts).(Action); !empty do return action
+    if strings.starts_with("memory", parts[1]) {
+        if len(parts) == 2 do return Print(Mem(RAM{}))
+        num, ok := strconv.parse_uint(parts[2])
+        if !ok do return Error { "Unknown memory cell", .InvalidArguments }
+        if num > 255 do return Error { "Incorrect memory address", .InvalidArguments }
+        return Print(Mem(num))
     }
+    // return Error { "Invalid print arguments", .InvalidArguments }
     return Error { "Unknown command", .UnknownCommand }
 }
