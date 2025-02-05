@@ -57,10 +57,10 @@ try_parse_quit :: proc(line: string) -> Maybe(Quit) {
 try_parse_print :: proc(parts: []string) -> Maybe(Action) {
     if !strings.starts_with("print", parts[0]) do return nil
     if len(parts) == 1 do return Print(CPU{})
-    if len(parts) != 2 do return nil
+    if len(parts) != 2 do return Error { "Invalid print arguments", .InvalidArguments }
     if strings.compare("pc", parts[1]) == 0 do return Print(ProgramCounter{})
     if strings.starts_with("flags", parts[1]) do return Print(Flags{})
-    if parts[1][0] != 'r' do return nil
+    if parts[1][0] != 'r' do return Error { "Invalid print arguments", .InvalidArguments }
     num, ok := strconv.parse_uint(parts[1][1:])
     if !ok do return Error { "Unknown command", .UnknownCommand }
     if num == 0 || num > 4 do return Error { "Incorrect register index", .InvalidRegister }
@@ -86,6 +86,5 @@ get_action :: proc() -> Action {
         if num > 255 do return Error { "Incorrect memory address", .InvalidArguments }
         return Print(Mem(num))
     }
-    // return Error { "Invalid print arguments", .InvalidArguments }
     return Error { "Unknown command", .UnknownCommand }
 }
