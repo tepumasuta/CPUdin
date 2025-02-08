@@ -32,7 +32,7 @@ ReplError :: enum {
     UnknownCommand,
     InvalidRegister,
 }
-@(private) Quit :: struct {}
+@(private) Quit :: distinct struct {}
 @(private)
 Print :: union #no_nil {
     CPU,
@@ -41,16 +41,16 @@ Print :: union #no_nil {
     Flags,
     Mem,
 }
-@(private) CPU :: struct {}
-@(private) ProgramCounter :: struct {}
-@(private) Flags :: struct {}
+@(private) CPU :: distinct struct {}
+@(private) ProgramCounter :: distinct struct {}
+@(private) Flags :: distinct struct {}
 @(private)
 Mem :: union {
     RAM,
     uint,
 }
-@(private) RAM :: struct {}
-@(private) Step :: struct {}
+@(private) RAM :: distinct struct {}
+@(private) Step :: distinct struct {}
 
 repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
     for action := get_action_pretty();; action = get_action_pretty() {
@@ -79,14 +79,16 @@ get_action :: proc() -> Action {
     stdin_reader: bufio.Reader
     bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
     defer bufio.reader_destroy(&stdin_reader)
-    line, err := bufio.reader_read_string(&stdin_reader, '\n')
-    defer if err == nil do delete(line)
+    full_line, err := bufio.reader_read_string(&stdin_reader, '\n')
+    defer if err == nil do delete(full_line)
+    if len(full_line) == 0 do return Quit{}
+    line: string = full_line[:len(full_line) - 1]
     if err != nil do return Error { "Failed to read line", err }
-    if action, empty := try_parse_quit(line).(Quit); !empty do return action
-    if action, empty := try_parse_step(line).(Step); !empty do return action
+    if action, ok := try_parse_quit(line).(Quit); ok do return action
+    if action, ok := try_parse_step(line).(Step); ok do return action
     parts := strings.split(line, " ")
     defer delete(parts)
-    if action, empty := try_parse_print(parts).(Action); !empty do return action
+    if action, ok := try_parse_print(parts).(Action); ok do return action
     return Error { "Unknown command", .UnknownCommand }
 }
 
@@ -150,20 +152,20 @@ print :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM, print_case: Print) {
         print_raw_value_u8(processor.regs[value])
         fmt.println()
     case Flags:
-        fmt.printfln("Flags { OF = %d, ZF = %d, GR = %d }", processor.flags.OF, processor.flags.ZF, processor.flags.GR)
+        fmt.printfln("Flags {{ OF = %d, ZF = %d, GR = %d }}", int(processor.flags.OF), int(processor.flags.ZF), int(processor.flags.GR))
     case CPU:
         fmt.print("CPU { pc = ")
         print_raw_value_u8(processor.pc)
-        fmt.printf(", Flags { OF = %d, ZF = %d, GR = %d }", processor.flags.OF, processor.flags.ZF, processor.flags.GR)
+        fmt.printf(", Flags {{ OF = %d, ZF = %d, GR = %d }}", int(processor.flags.OF), int(processor.flags.ZF), int(processor.flags.GR))
         for i in 0..=3 {
             fmt.printf(", r%v = ", i)
             print_raw_value_u8(processor.regs[i])
         }
-        fmt.println(" }")
+        fmt.println(" }}")
     }
 }
 
 @(private)
 print_raw_value_u8 :: proc(value: u8) {
-    fmt.printf("%x (%v)", value)
+    fmt.printf("%x (%v)", value, value)
 }
