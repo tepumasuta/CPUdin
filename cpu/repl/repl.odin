@@ -53,7 +53,7 @@ Mem :: union {
 @(private) Step :: struct {}
 
 repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
-    for action := get_action();; action = get_action() {
+    for action := get_action_pretty();; action = get_action_pretty() {
         switch act in action {
         case Quit: return
         case Step: cpu.step(processor, mem)
@@ -61,6 +61,16 @@ repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
         case Print: print(processor, mem, act)
         }
     }
+}
+
+@(private)
+get_action_pretty :: proc() -> Action {
+    print_prelude()
+    return get_action()
+}
+
+print_prelude :: proc() {
+    unimplemented("TODO: implement `print_prelude`")
 }
 
 @(private)
