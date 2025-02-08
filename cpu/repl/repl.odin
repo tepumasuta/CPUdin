@@ -10,7 +10,7 @@ import "core:strconv"
 import "core:fmt"
 
 @(private)
-Action :: union #no_nil {
+Action :: union {
     Quit,
     Print,
     Step,
@@ -53,13 +53,16 @@ Mem :: union {
 @(private) Step :: distinct struct {}
 
 repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
+    last_action: Action = nil
     for action := get_action_pretty();; action = get_action_pretty() {
+        if action == nil do action = last_action
         switch act in action {
         case Quit: return
         case Step: cpu.step(processor, mem)
         case Error: fmt.eprintfln("[ERROR]: %v because %v", act.err, act.excuse)
         case Print: print(processor, mem, act)
         }
+        last_action = action
     }
 }
 
@@ -84,6 +87,7 @@ get_action :: proc() -> Action {
     defer delete(full_line)
     if len(full_line) == 0 do return Quit{}
     line: string = full_line[:len(full_line) - 1]
+    if len(line) == 0 do return nil
     if action, ok := try_parse_quit(line).(Quit); ok do return action
     if action, ok := try_parse_step(line).(Step); ok do return action
     parts := strings.split(line, " ")
