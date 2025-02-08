@@ -141,7 +141,9 @@ print :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM, print_case: Print) {
     case Mem:
         switch address in value {
         case RAM: fmt.printfln("%x", mem^)
-        case uint: print_raw_value_u8(mem[address])
+        case uint:
+            print_raw_value_u8(mem[address])
+            fmt.println()
         }
     case ProgramCounter:
         fmt.print("pc = ")
