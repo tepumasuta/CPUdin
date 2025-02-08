@@ -80,10 +80,10 @@ get_action :: proc() -> Action {
     bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
     defer bufio.reader_destroy(&stdin_reader)
     full_line, err := bufio.reader_read_string(&stdin_reader, '\n')
-    defer if err == nil do delete(full_line)
+    if err != nil do return Error { "Failed to read line", err }
+    defer delete(full_line)
     if len(full_line) == 0 do return Quit{}
     line: string = full_line[:len(full_line) - 1]
-    if err != nil do return Error { "Failed to read line", err }
     if action, ok := try_parse_quit(line).(Quit); ok do return action
     if action, ok := try_parse_step(line).(Step); ok do return action
     parts := strings.split(line, " ")
