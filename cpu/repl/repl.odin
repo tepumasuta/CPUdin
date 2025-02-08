@@ -163,7 +163,7 @@ print :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM, print_case: Print) {
             fmt.printf(", r%v = ", i + 1)
             print_raw_value_u8(processor.regs[i])
         }
-        fmt.println(" }}")
+        fmt.println(" }")
     }
 }
 
