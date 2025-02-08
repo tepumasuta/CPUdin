@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:os"
 import "./cpu"
+import "./cpu/repl"
 
 main :: proc() {
     processor: cpu.CPU
@@ -14,13 +15,12 @@ main :: proc() {
     }
 
     data, success := os.read_entire_file(os.args[1])
+    defer if success do delete(data)
     if !success {
         fmt.eprintfln("[ERROR]: Failed to read file `%v`", os.args[1])
         os.exit(1)
     }
     copy(memory[:], data[:256] if len(data) > 256 else data[:])
 
-    for {
-        cpu.step(&processor, &memory)
-    }
+    repl.repl(&processor, &memory)
 }
