@@ -140,7 +140,7 @@ print :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM, print_case: Print) {
     switch value in print_case {
     case Mem:
         switch address in value {
-        case RAM: fmt.println("%x", mem^)
+        case RAM: fmt.printfln("%x", mem^)
         case uint: print_raw_value_u8(mem[address])
         }
     case ProgramCounter:
