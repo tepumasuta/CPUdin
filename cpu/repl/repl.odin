@@ -70,7 +70,7 @@ get_action_pretty :: proc() -> Action {
 }
 
 print_prelude :: proc() {
-    unimplemented("TODO: implement `print_prelude`")
+    fmt.print("$> ")
 }
 
 @(private)
