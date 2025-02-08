@@ -7,6 +7,7 @@ import "core:os"
 import "core:bufio"
 import "core:strings"
 import "core:strconv"
+import "core:fmt"
 
 @(private)
 Action :: union #no_nil {
@@ -53,7 +54,12 @@ Mem :: union {
 
 repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
     for action := get_action();; action = get_action() {
-        unimplemented("TODO: repl loop")
+        switch act in action {
+        case Quit: return
+        case Step: cpu.step(processor, mem)
+        case Error: fmt.eprintfln("[ERROR]: %v because %v", act.err, act.excuse)
+        case Print: print(processor, mem, act)
+        }
     }
 }
 
@@ -114,4 +120,39 @@ try_parse_print :: proc(parts: []string) -> Maybe(Action) {
     if print, ok := try_parse_print_registers(parts).(Action); ok do return print
     if print, ok := try_parse_print_memory(parts).(Action); ok do return print
     return Error { "Invalid print arguments", .InvalidArguments }
+}
+
+@(private)
+print :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM, print_case: Print) {
+    switch value in print_case {
+    case Mem:
+        switch address in value {
+        case RAM: fmt.println("%x", mem^)
+        case uint: print_raw_value_u8(mem[address])
+        }
+    case ProgramCounter:
+        fmt.print("pc = ")
+        print_raw_value_u8(processor.pc)
+        fmt.println()
+    case uint:
+        fmt.printf("r%v = ", value)
+        print_raw_value_u8(processor.regs[value])
+        fmt.println()
+    case Flags:
+        fmt.printfln("Flags { OF = %d, ZF = %d, GR = %d }", processor.flags.OF, processor.flags.ZF, processor.flags.GR)
+    case CPU:
+        fmt.print("CPU { pc = ")
+        print_raw_value_u8(processor.pc)
+        fmt.printf(", Flags { OF = %d, ZF = %d, GR = %d }", processor.flags.OF, processor.flags.ZF, processor.flags.GR)
+        for i in 0..=3 {
+            fmt.printf(", r%v = ", i)
+            print_raw_value_u8(processor.regs[i])
+        }
+        fmt.println(" }")
+    }
+}
+
+@(private)
+print_raw_value_u8 :: proc(value: u8) {
+    fmt.printf("%x (%v)", value)
 }
