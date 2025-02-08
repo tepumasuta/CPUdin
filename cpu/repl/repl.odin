@@ -69,6 +69,7 @@ get_action_pretty :: proc() -> Action {
     return get_action()
 }
 
+@(private)
 print_prelude :: proc() {
     fmt.print("$> ")
 }
