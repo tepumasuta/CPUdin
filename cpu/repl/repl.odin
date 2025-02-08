@@ -149,7 +149,7 @@ print :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM, print_case: Print) {
         fmt.println()
     case uint:
         fmt.printf("r%v = ", value)
-        print_raw_value_u8(processor.regs[value])
+        print_raw_value_u8(processor.regs[value - 1])
         fmt.println()
     case Flags:
         fmt.printfln("Flags {{ OF = %d, ZF = %d, GR = %d }}", int(processor.flags.OF), int(processor.flags.ZF), int(processor.flags.GR))
@@ -158,7 +158,7 @@ print :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM, print_case: Print) {
         print_raw_value_u8(processor.pc)
         fmt.printf(", Flags {{ OF = %d, ZF = %d, GR = %d }}", int(processor.flags.OF), int(processor.flags.ZF), int(processor.flags.GR))
         for i in 0..=3 {
-            fmt.printf(", r%v = ", i)
+            fmt.printf(", r%v = ", i + 1)
             print_raw_value_u8(processor.regs[i])
         }
         fmt.println(" }}")
