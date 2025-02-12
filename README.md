@@ -4,6 +4,10 @@
 
 An 8-bit minimalistic cpu implemented in [Odin](https://odin-lang.org/) programming language. It has 4 registers, the flag reister and the program counter registers and can address 256 bytes of memory. Following flags are supported: ZF (zero), OF (overflow), GR (greater). For instruction set see the Encoding section. All programs start with progam counter = 0
 
+## Requirements
+
+This project requires [editline](https://github.com/troglobit/editline). It must be able to link with it
+
 ## Build
 
 To build an executable run:

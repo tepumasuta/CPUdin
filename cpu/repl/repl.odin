@@ -1,6 +1,7 @@
 package repl
 
 import "../../cpu"
+import "../../vendor/editline"
 
 import "core:io"
 import "core:os"
@@ -53,6 +54,11 @@ Mem :: union {
 @(private) Step :: distinct struct {}
 
 repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
+    editline.hist_size = 20
+    editline.initialize()
+    defer editline.uninitialize()
+    editline.read_history(".cpudin-history.txt")
+
     last_action: Action = nil
     for action := get_action_pretty();; action = get_action_pretty() {
         if action == nil do action = last_action
@@ -68,25 +74,21 @@ repl :: proc(processor: ^cpu.CPU, mem: ^cpu.RAM) {
 
 @(private)
 get_action_pretty :: proc() -> Action {
-    print_prelude()
     return get_action()
 }
 
 @(private)
 print_prelude :: proc() {
-    fmt.print("$> ")
+    fmt.print("")
 }
 
 @(private)
 get_action :: proc() -> Action {
-    stdin_reader: bufio.Reader
-    bufio.reader_init(&stdin_reader, os.stream_from_handle(os.stdin))
-    defer bufio.reader_destroy(&stdin_reader)
-    full_line, err := bufio.reader_read_string(&stdin_reader, '\n')
-    defer delete(full_line)
-    if len(full_line) == 0 do return Quit{}
-    if err != nil do return Error { "Failed to read line", err }
-    line: string = full_line[:len(full_line) - 1]
+    // full_line, err := bufio.reader_read_string(&stdin_reader, '\n')
+    full_line_c, ok := editline.readline("$> ")
+    if !ok do return Quit{}
+    defer delete(full_line_c)
+    line := strings.trim_right(string(full_line_c), " ")
     if len(line) == 0 do return nil
     if action, ok := try_parse_quit(line).(Quit); ok do return action
     if action, ok := try_parse_step(line).(Step); ok do return action
